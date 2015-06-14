@@ -1,7 +1,7 @@
 var   five = require("johnny-five");
 
-module.exports = {
-  setupJoints :  function(phoenix) {
+var setupJoints = function(phoenix) {
+
     // deal with unassigned stuff... there must be an easier way to do this, like method_missing?.
     for (side of ['r', 'l']) {
       for (leg of [1,2,3]) {
@@ -51,7 +51,6 @@ module.exports = {
 
     phoenix.legs = new five.Servo.Array([phoenix.r1c, phoenix.r1f, phoenix.r1t, phoenix.l1c, phoenix.l1f, phoenix.l1t, phoenix.r2c, phoenix.r2f, phoenix.r2t, phoenix.l2c, phoenix.l2f, phoenix.l2t, phoenix.r3c, phoenix.r3f, phoenix.r3t, phoenix.l3c, phoenix.l3f, phoenix.l3t]);
 
-  }
 }
 
-  
+module.exports =  {setupJoints: setupJoints} ;
