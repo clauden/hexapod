@@ -20,11 +20,13 @@ var   five = require("johnny-five"),
       util = require("util"),
       IOBoard = require("ioboard"),
       MaestroIOBoard = require("maestro-ioboard"),
+      actions = require("./actions"),
       joints = require("./joints"),
       positions = require("./positions"),
       PololuMaestro = require("pololu-maestro");
 
-var   board, phoenix = { state: "sleep" },
+var   board, phoenix = { state: "sleep" };
+
       easeIn = "inQuad",
       easeOut = "outQuad",
       easeInOut = "inOutQuad";
@@ -37,79 +39,8 @@ var tty = "/dev/cu.usbmodem00087311";
 
 var maestro = new PololuMaestro(tty, 19200);
 
+// need to do this early
 positions.setPositions();
-
-/****
-  // This object describes the "leg lift" used in walking
-  lift = { femur: 30, tibia: -20 },
-
-  // This object contains the home positions of each
-  // servo in its forward, mid and rear position for
-  // walking.
-  h = {
-    f: {
-      c: [56, 70, 91],
-      f: [116, 120, 119],
-      t: [97, 110, 116]
-    },
-    m: {
-      c: [70, 88, 109],
-      f: [116, 117, 116],
-      t: [102, 106, 104]
-    },
-    r: {
-      c: [56, 70, 91],
-      f: [116, 120, 119],
-      t: [97, 110, 116]
-    }
-  },
-
-  // This object contains our end effector positions for turns
-  t = {
-    f: {
-      c: [56, 70, 85 ],
-      f: [121, 120, 119],
-      t: [117, 110, 105]
-    },
-    m: {
-      c: [73, 88, 105],
-      f: [118, 117, 118],
-      t: [107, 106, 107]
-    },
-    r: {
-      c: [56, 70, 85 ],
-      f: [121, 120, 119],
-      t: [117, 110, 105]
-    }
-  },
-
-  // This object contains the home positions of each
-  // servo for the seven steps in walk and crawl.
-  s = {
-    f: {
-      c: [56, 59, 65, 70, 76, 82, 91],
-      f: [116, 117,119, 120, 120, 119, 119],
-      t: [97, 101, 106, 110, 112, 114, 116]
-    },
-    m: {
-      c: [70, 76, 82, 88, 94, 100, 109],
-      f: [116, 119, 118, 117, 118, 117, 116],
-      t: [102, 105, 106, 106, 108, 106, 104]
-    },
-    r: {
-      c: [91, 82, 76, 70, 65, 59, 56],
-      f: [119, 119,120, 120, 119, 117, 116],
-      t: [116, 114, 112, 110, 106, 101, 97]
-    }
-  },
-
-  // This object contains the sleep positions for our joints
-  l = {
-    c: 90,
-    f: 165,
-    t: 150
-  };
-****/
 
 // 
 // Assign controller pins to servos, initialize leg-servo mappings, group structures
@@ -137,6 +68,8 @@ var setupLegs = function(p) {
 
     // end servo assignments
 
+// following is now done in setupJoints()?
+/***
     // Leg groups
 
     // Joints (used in stand)
@@ -175,6 +108,7 @@ var setupLegs = function(p) {
     p.triJoints = new five.Servo.Array([p.leftOuterCoxa, p.r2c, p.leftOuterFemur, p.r2f, p.leftOuterTibia, p.r2t, p.rightOuterCoxa, p.l2c, p.rightOuterFemur, p.l2f, p.rightOuterTibia, p.l2t]);
 
     p.legs = new five.Servo.Array([p.r1c, p.r1f, p.r1t, p.l1c, p.l1f, p.l1t, p.r2c, p.r2f, p.r2t, p.l2c, p.l2f, p.l2t, p.r3c, p.r3f, p.r3t, p.l3c, p.l3f, p.l3t]);
+***/
 
 }
 
@@ -195,6 +129,9 @@ var mb = new MaestroIOBoard(maestro, PololuMaestro.TYPES.MICRO_MAESTRO, [
       setupLegs(phoenix);
       legsAnimation = new five.Animation(phoenix.legs);
 
+      actions(phoenix);
+
+/*****
   var xyzzy = {
     target: phoenix.r1,
     duration: 5000,
@@ -294,27 +231,27 @@ var mb = new MaestroIOBoard(maestro, PololuMaestro.TYPES.MICRO_MAESTRO, [
       onstop: function() { phoenix.att(); },
       oncomplete: function() { },
       keyFrames: [
-        [ null, {degrees: h.f.c[1]}, {degrees: h.f.c[a]}, null, {degrees: h.f.c[b]}],
+        [ null, {degrees: h.f.c[1]}, {degrees: h.f.c[a]}, false, {degrees: h.f.c[b]}],
         [ null, {degrees: h.f.f[1]}, {degrees: h.f.f[a]}, { step: lift.femur, easing: easeOut }, {degrees: h.f.f[b], easing: easeIn}],
         [ null, {degrees: h.f.t[1]}, {degrees: h.f.t[a]}, { step: lift.tibia, easing: easeOut }, {degrees: h.f.t[b], easing: easeIn}],
 
-        [ null, null, {degrees: h.f.c[b]}, {degrees: h.f.c[1]}, {degrees: h.f.c[a]}],
+        [ null, false, {degrees: h.f.c[b]}, {degrees: h.f.c[1]}, {degrees: h.f.c[a]}],
         [ null, { step: lift.femur, easing: easeOut }, {degrees: h.f.f[b], easing: easeIn}, {degrees: h.f.f[1]}, {degrees: h.f.f[a]}],
         [ null, { step: lift.tibia, easing: easeOut }, {degrees: h.f.t[b], easing: easeIn}, {degrees: h.f.t[1]}, {degrees: h.f.t[a]}],
 
-        [ null, null, {degrees: h.m.c[b]}, {degrees: h.m.c[1]}, {degrees: h.m.c[a]}],
+        [ null, false, {degrees: h.m.c[b]}, {degrees: h.m.c[1]}, {degrees: h.m.c[a]}],
         [ null, { step: lift.femur, easing: easeOut }, {degrees: h.m.f[b], easing: easeIn}, {degrees: h.m.f[1]}, {degrees: h.m.f[a]}],
         [ null, { step: lift.tibia, easing: easeOut }, {degrees: h.m.t[b], easing: easeIn}, {degrees: h.m.t[1]}, {degrees: h.m.t[a]}],
 
-        [ null, {degrees: h.m.c[1]}, {degrees: h.m.c[a]}, null, {degrees: h.m.c[b]}],
+        [ null, {degrees: h.m.c[1]}, {degrees: h.m.c[a]}, false, {degrees: h.m.c[b]}],
         [ null, {degrees: h.m.f[1]}, {degrees: h.m.f[a]}, { step: lift.femur, easing: easeOut }, {degrees: h.m.f[b], easing: easeIn}],
         [ null, {degrees: h.m.t[1]}, {degrees: h.m.t[a]}, { step: lift.tibia, easing: easeOut }, {degrees: h.m.t[b], easing: easeIn}],
 
-        [ null, {degrees: h.r.c[1]}, {degrees: h.r.c[b]}, null, {degrees: h.r.c[a]}],
+        [ null, {degrees: h.r.c[1]}, {degrees: h.r.c[b]}, false, {degrees: h.r.c[a]}],
         [ null, {degrees: h.r.f[1]}, {degrees: h.r.f[b]}, { step: lift.femur, easing: easeOut }, {degrees: h.r.f[a], easing: easeIn}],
         [ null, {degrees: h.r.t[1]}, {degrees: h.r.t[b]}, { step: lift.tibia, easing: easeOut }, {degrees: h.r.t[a], easing: easeIn}],
 
-        [ null, null, {degrees: h.r.c[a]}, {degrees: h.r.c[1]}, {degrees: h.r.c[b]}],
+        [ null, false, {degrees: h.r.c[a]}, {degrees: h.r.c[1]}, {degrees: h.r.c[b]}],
         [ null, { step: lift.femur, easing: easeOut }, {degrees: h.r.f[a], easing: easeIn}, {degrees: h.r.f[1]}, {degrees: h.r.f[b]}],
         [ null, { step: lift.tibia, easing: easeOut }, {degrees: h.r.t[a], easing: easeIn}, {degrees: h.r.t[1]}, {degrees: h.r.t[b]}],
       ]
@@ -332,8 +269,8 @@ var mb = new MaestroIOBoard(maestro, PololuMaestro.TYPES.MICRO_MAESTRO, [
     onstop: function() { phoenix.att(); },
     oncomplete: function() { },
     keyFrames: [
-      [null, null, {degrees: s.f.c[5]}, null, null, null, null, {degrees: s.f.c[5]}, null, {degrees: s.f.c[0]}, null, null, null, null, {degrees: s.f.c[5]}], // r1c
-      [null, { step: lift.femur, easing: easeOut }, {degrees: s.f.f[5], easing: easeIn}, null, null, null, null, {degrees: s.f.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.f.f[0], easing: easeIn}, null, null, null, null, {degrees: s.f.f[5]}],
+      [null, false, {degrees: s.f.c[5]}, false, false, false, false, {degrees: s.f.c[5]}, false, {degrees: s.f.c[0]}, false, false, false, false, {degrees: s.f.c[5]}], // r1c
+      [null, { step: lift.femur, easing: easeOut }, {degrees: s.f.f[5], easing: easeIn}, false, false, false, false, {degrees: s.f.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.f.f[0], easing: easeIn}, false, false, false, false, {degrees: s.f.f[5]}],
       [null, { step: lift.tibia, easing: easeOut }, {degrees: s.f.t[5], easing: easeIn}, null, null, null, null, {degrees: s.f.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.f.t[0], easing: easeIn}, null, null, null, null, {degrees: s.f.t[5]}],
 
       [null, null, null, false, null, {degrees: s.f.c[2]}, null, {degrees: s.f.c[2]}, null, null, {degrees: s.f.c[5]}, null, {degrees: s.f.c[0]}, null, {degrees: s.f.c[2]}],
@@ -587,6 +524,8 @@ var mb = new MaestroIOBoard(maestro, PololuMaestro.TYPES.MICRO_MAESTRO, [
   phoenix.stop = function() {
     legsAnimation.stop();
   };
+******/
+
 
   // Inject the `ph` object into
   // the Repl instance's context
