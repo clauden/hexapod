@@ -1,6 +1,11 @@
 
+var temporal = require("temporal");
 
 var Actions = function(phoenix) {
+
+  var easeIn = "inQuad",
+      easeOut = "outQuad",
+      easeInOut = "inOutQuad";
 
   // Return to home position
   phoenix.att = function() {
@@ -18,7 +23,7 @@ var Actions = function(phoenix) {
       work[i].offset = Math.abs(phoenix[leg.name+"f"].last.reqDegrees - leg.home);
     });
 
-    var moving = _.max(work, function(leg){ return leg.offset; });
+    var moving = Math.max(work, function(leg){ return leg.offset; });
 
     if (moving.name === "r2" || moving.name === "l1" || moving.name === "l3") {
       grouped = [ [1, 3, 5], [0, 2, 4] ];
@@ -84,8 +89,8 @@ var Actions = function(phoenix) {
       phoenix.state = "sleep";
     },
     keyFrames: [
-      [null, null, false, { degrees: l.c, easing: easeOut }],
-      [null, null, false, { degrees: l.c, easing: easeOut }],
+      [null, false, false, { degrees: l.c, easing: easeOut }],
+      [null, false, false, { degrees: l.c, easing: easeOut }],
       [null, { degrees: h.f.f[1] + 20, easing: easeOut }, { degrees: l.f, easing: easeInOut }],
       [null, false, { degrees: l.t, easing: easeInOut }]
     ]
@@ -100,7 +105,7 @@ var Actions = function(phoenix) {
       phoenix.state = "stand";
     },
     keyFrames: [
-      [null, false, { degrees: 20, easing: easeInOut }, false, false, false, false, false, null, {copyDegrees: 0, easing: easeInOut} ], // r1c
+      [null, false, { degrees: 20, easing: easeInOut }, false, false, false, false, false, false, {copyDegrees: 0, easing: easeInOut} ], // r1c
       [null, { step: 55, easing: easeInOut }, false, false, false, false, false, false, { step: -55, easing: easeInOut }, {copyDegrees: 0, easing: easeInOut} ], // r1f
       [null, { degrees: 85, easing: easeInOut }, { degrees: 45, easing: easeInOut }, { step: -15, easing: easeInOut}, { step: 30, easing: easeInOut}, { copyDegrees: 3, easing: easeInOut}, { copyFrame: 4 }, { copyDegrees: 2, easing: easeInOut}, { copyFrame: 1 }, {copyDegrees: 0, easing: easeInOut} ]
     ]
@@ -134,27 +139,27 @@ var Actions = function(phoenix) {
       onstop: function() { phoenix.att(); },
       oncomplete: function() { },
       keyFrames: [
-        [ null, {degrees: h.f.c[1]}, {degrees: h.f.c[a]}, null, {degrees: h.f.c[b]}],
+        [ null, {degrees: h.f.c[1]}, {degrees: h.f.c[a]}, false, {degrees: h.f.c[b]}],
         [ null, {degrees: h.f.f[1]}, {degrees: h.f.f[a]}, { step: lift.femur, easing: easeOut }, {degrees: h.f.f[b], easing: easeIn}],
         [ null, {degrees: h.f.t[1]}, {degrees: h.f.t[a]}, { step: lift.tibia, easing: easeOut }, {degrees: h.f.t[b], easing: easeIn}],
 
-        [ null, null, {degrees: h.f.c[b]}, {degrees: h.f.c[1]}, {degrees: h.f.c[a]}],
+        [ null, false, {degrees: h.f.c[b]}, {degrees: h.f.c[1]}, {degrees: h.f.c[a]}],
         [ null, { step: lift.femur, easing: easeOut }, {degrees: h.f.f[b], easing: easeIn}, {degrees: h.f.f[1]}, {degrees: h.f.f[a]}],
         [ null, { step: lift.tibia, easing: easeOut }, {degrees: h.f.t[b], easing: easeIn}, {degrees: h.f.t[1]}, {degrees: h.f.t[a]}],
 
-        [ null, null, {degrees: h.m.c[b]}, {degrees: h.m.c[1]}, {degrees: h.m.c[a]}],
+        [ null, false, {degrees: h.m.c[b]}, {degrees: h.m.c[1]}, {degrees: h.m.c[a]}],
         [ null, { step: lift.femur, easing: easeOut }, {degrees: h.m.f[b], easing: easeIn}, {degrees: h.m.f[1]}, {degrees: h.m.f[a]}],
         [ null, { step: lift.tibia, easing: easeOut }, {degrees: h.m.t[b], easing: easeIn}, {degrees: h.m.t[1]}, {degrees: h.m.t[a]}],
 
-        [ null, {degrees: h.m.c[1]}, {degrees: h.m.c[a]}, null, {degrees: h.m.c[b]}],
+        [ null, {degrees: h.m.c[1]}, {degrees: h.m.c[a]}, false, {degrees: h.m.c[b]}],
         [ null, {degrees: h.m.f[1]}, {degrees: h.m.f[a]}, { step: lift.femur, easing: easeOut }, {degrees: h.m.f[b], easing: easeIn}],
         [ null, {degrees: h.m.t[1]}, {degrees: h.m.t[a]}, { step: lift.tibia, easing: easeOut }, {degrees: h.m.t[b], easing: easeIn}],
 
-        [ null, {degrees: h.r.c[1]}, {degrees: h.r.c[b]}, null, {degrees: h.r.c[a]}],
+        [ null, {degrees: h.r.c[1]}, {degrees: h.r.c[b]}, false, {degrees: h.r.c[a]}],
         [ null, {degrees: h.r.f[1]}, {degrees: h.r.f[b]}, { step: lift.femur, easing: easeOut }, {degrees: h.r.f[a], easing: easeIn}],
         [ null, {degrees: h.r.t[1]}, {degrees: h.r.t[b]}, { step: lift.tibia, easing: easeOut }, {degrees: h.r.t[a], easing: easeIn}],
 
-        [ null, null, {degrees: h.r.c[a]}, {degrees: h.r.c[1]}, {degrees: h.r.c[b]}],
+        [ null, false, {degrees: h.r.c[a]}, {degrees: h.r.c[1]}, {degrees: h.r.c[b]}],
         [ null, { step: lift.femur, easing: easeOut }, {degrees: h.r.f[a], easing: easeIn}, {degrees: h.r.f[1]}, {degrees: h.r.f[b]}],
         [ null, { step: lift.tibia, easing: easeOut }, {degrees: h.r.t[a], easing: easeIn}, {degrees: h.r.t[1]}, {degrees: h.r.t[b]}],
       ]
@@ -172,29 +177,29 @@ var Actions = function(phoenix) {
     onstop: function() { phoenix.att(); },
     oncomplete: function() { },
     keyFrames: [
-      [null, null, {degrees: s.f.c[5]}, null, null, null, null, {degrees: s.f.c[5]}, null, {degrees: s.f.c[0]}, null, null, null, null, {degrees: s.f.c[5]}], // r1c
-      [null, { step: lift.femur, easing: easeOut }, {degrees: s.f.f[5], easing: easeIn}, null, null, null, null, {degrees: s.f.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.f.f[0], easing: easeIn}, null, null, null, null, {degrees: s.f.f[5]}],
-      [null, { step: lift.tibia, easing: easeOut }, {degrees: s.f.t[5], easing: easeIn}, null, null, null, null, {degrees: s.f.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.f.t[0], easing: easeIn}, null, null, null, null, {degrees: s.f.t[5]}],
+      [null, false, {degrees: s.f.c[5]}, false, false, false, false, {degrees: s.f.c[5]}, false, {degrees: s.f.c[0]}, false, false, false, false, {degrees: s.f.c[5]}], // r1c
+      [null, { step: lift.femur, easing: easeOut }, {degrees: s.f.f[5], easing: easeIn}, false, false, false, false, {degrees: s.f.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.f.f[0], easing: easeIn}, false, false, false, false, {degrees: s.f.f[5]}],
+      [null, { step: lift.tibia, easing: easeOut }, {degrees: s.f.t[5], easing: easeIn}, false, false, false, false, {degrees: s.f.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.f.t[0], easing: easeIn}, false, false, false, false, {degrees: s.f.t[5]}],
 
-      [null, null, null, false, null, {degrees: s.f.c[2]}, null, {degrees: s.f.c[2]}, null, null, {degrees: s.f.c[5]}, null, {degrees: s.f.c[0]}, null, {degrees: s.f.c[2]}],
-      [null, null, null, false, { step: lift.femur, easing: easeOut }, {degrees: s.f.f[2], easing: easeIn}, null, {degrees: s.f.f[2]}, null, null, {degrees: s.f.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.f.f[0], easing: easeIn}, null, {degrees: s.f.f[2]}],
-      [null, null, null, false, { step: lift.tibia, easing: easeOut }, {degrees: s.f.t[2], easing: easeIn}, null, {degrees: s.f.t[2]}, null, null, {degrees: s.f.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.f.t[0], easing: easeIn}, null, {degrees: s.f.t[2]}],
+      [null, false, false, false, false, {degrees: s.f.c[2]}, false, {degrees: s.f.c[2]}, false, false, {degrees: s.f.c[5]}, false, {degrees: s.f.c[0]}, false, {degrees: s.f.c[2]}],
+      [null, false, false, false, { step: lift.femur, easing: easeOut }, {degrees: s.f.f[2], easing: easeIn}, false, {degrees: s.f.f[2]}, false, false, {degrees: s.f.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.f.f[0], easing: easeIn}, false, {degrees: s.f.f[2]}],
+      [null, false, false, false, { step: lift.tibia, easing: easeOut }, {degrees: s.f.t[2], easing: easeIn}, false, {degrees: s.f.t[2]}, false, false, {degrees: s.f.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.f.t[0], easing: easeIn}, false, {degrees: s.f.t[2]}],
 
-      [null, null, null, null, false, null, {degrees: s.m.c[1]}, {degrees: s.m.c[1]}, null, null, null, {degrees: s.m.c[5]}, null, {degrees: s.m.c[0]}, {degrees: s.m.c[1]}],
-      [null, null, null, null, false, { step: lift.femur, easing: easeOut }, {degrees: s.m.f[1], easing: easeIn}, {degrees: s.m.f[1]}, null, null, null, {degrees: s.m.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.m.f[0], easing: easeIn}, {degrees: s.m.f[1]}],
-      [null, null, null, null, false, { step: lift.tibia, easing: easeOut }, {degrees: s.m.t[1], easing: easeIn}, {degrees: s.m.t[1]}, null, null, null, {degrees: s.m.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.m.t[0], easing: easeIn}, {degrees: s.m.t[1]}],
+      [null, false, false, false, false, false, {degrees: s.m.c[1]}, {degrees: s.m.c[1]}, false, false, false, {degrees: s.m.c[5]}, false, {degrees: s.m.c[0]}, {degrees: s.m.c[1]}],
+      [null, false, false, false, false, { step: lift.femur, easing: easeOut }, {degrees: s.m.f[1], easing: easeIn}, {degrees: s.m.f[1]}, false, false, false, {degrees: s.m.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.m.f[0], easing: easeIn}, {degrees: s.m.f[1]}],
+      [null, false, false, false, false, { step: lift.tibia, easing: easeOut }, {degrees: s.m.t[1], easing: easeIn}, {degrees: s.m.t[1]}, false, false, false, {degrees: s.m.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.m.t[0], easing: easeIn}, {degrees: s.m.t[1]}],
 
-      [null, false, null, {degrees: s.m.c[4]}, null, null, null, {degrees: s.m.c[4]}, {degrees: s.m.c[5]}, null, {degrees: s.m.c[0]}, null, null, null, {degrees: s.m.c[4]}],
-      [null, false, { step: lift.femur, easing: easeOut }, {degrees: s.m.f[4], easing: easeIn}, null, null, null, {degrees: s.m.f[4]}, {degrees: s.m.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.m.f[0], easing: easeIn}, null, null, null, {degrees: s.m.f[4]}],
-      [null, false, { step: lift.tibia, easing: easeOut }, {degrees: s.m.t[4], easing: easeIn}, null, null, null, {degrees: s.m.t[4]}, {degrees: s.m.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.m.t[0], easing: easeIn}, null, null, null, {degrees: s.m.t[4]}],
+      [null, false, false, {degrees: s.m.c[4]}, false, false, false, {degrees: s.m.c[4]}, {degrees: s.m.c[5]}, false, {degrees: s.m.c[0]}, false, false, false, {degrees: s.m.c[4]}],
+      [null, false, { step: lift.femur, easing: easeOut }, {degrees: s.m.f[4], easing: easeIn}, false, false, false, {degrees: s.m.f[4]}, {degrees: s.m.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.m.f[0], easing: easeIn}, false, false, false, {degrees: s.m.f[4]}],
+      [null, false, { step: lift.tibia, easing: easeOut }, {degrees: s.m.t[4], easing: easeIn}, false, false, false, {degrees: s.m.t[4]}, {degrees: s.m.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.m.t[0], easing: easeIn}, false, false, false, {degrees: s.m.t[4]}],
 
-      [null, null, false, null, {degrees: s.r.c[3]}, null, null, {degrees: s.r.c[3]}, null, {degrees: s.r.c[5]}, null, {degrees: s.r.c[0]}, {degrees: s.r.c[1]}, null, {degrees: s.r.c[3]}],
-      [null, null, false, { step: lift.femur, easing: easeOut }, {degrees: s.r.f[3], easing: easeIn}, null, null, {degrees: s.r.f[3]}, null, {degrees: s.r.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.r.f[0], easing: easeIn}, {degrees: s.r.f[1]}, null, {degrees: s.r.f[3]}],
-      [null, null, false, { step: lift.tibia, easing: easeOut }, {degrees: s.r.t[3], easing: easeIn}, null, null, {degrees: s.r.t[3]}, null, {degrees: s.r.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.r.t[0], easing: easeIn}, {degrees: s.r.t[1]}, null, {degrees: s.r.t[3]}],
+      [null, false, false, false, {degrees: s.r.c[3]}, false, false, {degrees: s.r.c[3]}, false, {degrees: s.r.c[5]}, false, {degrees: s.r.c[0]}, {degrees: s.r.c[1]}, false, {degrees: s.r.c[3]}],
+      [null, false, false, { step: lift.femur, easing: easeOut }, {degrees: s.r.f[3], easing: easeIn}, false, false, {degrees: s.r.f[3]}, false, {degrees: s.r.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.r.f[0], easing: easeIn}, {degrees: s.r.f[1]}, false, {degrees: s.r.f[3]}],
+      [null, false, false, { step: lift.tibia, easing: easeOut }, {degrees: s.r.t[3], easing: easeIn}, false, false, {degrees: s.r.t[3]}, false, {degrees: s.r.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.r.t[0], easing: easeIn}, {degrees: s.r.t[1]}, false, {degrees: s.r.t[3]}],
 
-      [null, null, null, null, null, false, null, {degrees: s.r.c[0]}, null, null, null, null, {degrees: s.r.c[5]}, null, {degrees: s.r.c[0]}],
-      [null, null, null, null, null, false, { step: lift.femur, easing: easeOut }, {degrees: s.r.f[0], easing: easeIn}, null, null, null, null, {degrees: s.r.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.r.f[0], easing: easeIn}],
-      [null, null, null, null, null, false, { step: lift.tibia, easing: easeOut }, {degrees: s.r.t[0], easing: easeIn}, null, null, null, null, {degrees: s.r.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.r.t[0], easing: easeIn}]
+      [null, false, false, false, false, false, false, {degrees: s.r.c[0]}, false, false, false, false, {degrees: s.r.c[5]}, false, {degrees: s.r.c[0]}],
+      [null, false, false, false, false, false, { step: lift.femur, easing: easeOut }, {degrees: s.r.f[0], easing: easeIn}, false, false, false, false, {degrees: s.r.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.r.f[0], easing: easeIn}],
+      [null, false, false, false, false, false, { step: lift.tibia, easing: easeOut }, {degrees: s.r.t[0], easing: easeIn}, false, false, false, false, {degrees: s.r.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.r.t[0], easing: easeIn}]
     ]
   };
 
@@ -208,29 +213,29 @@ var Actions = function(phoenix) {
     onstop: function() { phoenix.att(); },
     oncomplete: function() { },
     keyFrames: [
-      [null, null, {degrees: s.f.c[5]}, null, null, null, null, {degrees: s.f.c[5]}, null, {degrees: s.f.c[0]}, null, null, null, null, null, null, null, null, null, {degrees: s.f.c[5]}],
-      [null, { step: lift.femur, easing: easeOut }, {degrees: s.f.f[5], easing: easeIn}, null, null, null, null, {degrees: s.f.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.f.f[0], easing: easeIn}, null, null, null, null, null, null, null, null, null, {degrees: s.f.f[5]}],
-      [null, { step: lift.tibia, easing: easeOut }, {degrees: s.f.t[5], easing: easeIn}, null, null, null, null, {degrees: s.f.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.f.t[0], easing: easeIn}, null, null, null, null, null, null, null, null, null, {degrees: s.f.t[5]}],
+      [null, false, {degrees: s.f.c[5]}, false, false, false, false, {degrees: s.f.c[5]}, false, {degrees: s.f.c[0]}, false, false, false, false, false, false, false, false, false, {degrees: s.f.c[5]}],
+      [null, { step: lift.femur, easing: easeOut }, {degrees: s.f.f[5], easing: easeIn}, false, false, false, false, {degrees: s.f.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.f.f[0], easing: easeIn}, false, false, false, false, false, false, false, false, false, {degrees: s.f.f[5]}],
+      [null, { step: lift.tibia, easing: easeOut }, {degrees: s.f.t[5], easing: easeIn}, false, false, false, false, {degrees: s.f.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.f.t[0], easing: easeIn}, false, false, false, false, false, false, false, false, false, {degrees: s.f.t[5]}],
 
-      [null, null, null, false, null, {degrees: s.f.c[2]}, null, {degrees: s.f.c[2]}, null, null, null, null, null, {degrees: s.f.c[5]}, null, {degrees: s.f.c[0]}, null, null, null, {degrees: s.f.c[2]}],
-      [null, null, null, false, { step: lift.femur, easing: easeOut }, {degrees: s.f.f[2], easing: easeIn}, null, {degrees: s.f.f[2]}, null, null, null, null, null, {degrees: s.f.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.f.f[0], easing: easeIn}, null, null, null, {degrees: s.f.f[2]}],
-      [null, null, null, false, { step: lift.tibia, easing: easeOut }, {degrees: s.f.t[2], easing: easeIn}, null, {degrees: s.f.t[2]}, null, null, null, null, null, {degrees: s.f.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.f.t[0], easing: easeIn}, null, null, null, {degrees: s.f.t[2]}],
+      [null, false, false, false, false, {degrees: s.f.c[2]}, false, {degrees: s.f.c[2]}, false, false, false, false, false, {degrees: s.f.c[5]}, false, {degrees: s.f.c[0]}, false, false, false, {degrees: s.f.c[2]}],
+      [null, false, false, false, { step: lift.femur, easing: easeOut }, {degrees: s.f.f[2], easing: easeIn}, false, {degrees: s.f.f[2]}, false, false, false, false, false, {degrees: s.f.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.f.f[0], easing: easeIn}, false, false, false, {degrees: s.f.f[2]}],
+      [null, false, false, false, { step: lift.tibia, easing: easeOut }, {degrees: s.f.t[2], easing: easeIn}, false, {degrees: s.f.t[2]}, false, false, false, false, false, {degrees: s.f.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.f.t[0], easing: easeIn}, false, false, false, {degrees: s.f.t[2]}],
 
-      [null, null, null, null, false, null, {degrees: s.m.c[1]}, {degrees: s.m.c[1]}, null, null, null, null, null, null, null, {degrees: s.m.c[5]}, null, {degrees: s.m.c[0]}, null, {degrees: s.m.c[1]}],
-      [null, null, null, null, false, { step: lift.femur, easing: easeOut }, {degrees: s.m.f[1], easing: easeIn}, {degrees: s.m.f[1]}, null, null, null, null, null, null, null, {degrees: s.m.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.m.f[0], easing: easeIn}, null, {degrees: s.m.f[1]}],
-      [null, null, null, null, false, { step: lift.tibia, easing: easeOut }, {degrees: s.m.t[1], easing: easeIn}, {degrees: s.m.t[1]}, null, null, null, null, null, null, null, {degrees: s.m.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.m.t[0], easing: easeIn}, null, {degrees: s.m.t[1]}],
+      [null, false, false, false, false, false, {degrees: s.m.c[1]}, {degrees: s.m.c[1]}, false, false, false, false, false, false, false, {degrees: s.m.c[5]}, false, {degrees: s.m.c[0]}, false, {degrees: s.m.c[1]}],
+      [null, false, false, false, false, { step: lift.femur, easing: easeOut }, {degrees: s.m.f[1], easing: easeIn}, {degrees: s.m.f[1]}, false, false, false, false, false, false, false, {degrees: s.m.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.m.f[0], easing: easeIn}, false, {degrees: s.m.f[1]}],
+      [null, false, false, false, false, { step: lift.tibia, easing: easeOut }, {degrees: s.m.t[1], easing: easeIn}, {degrees: s.m.t[1]}, false, false, false, false, false, false, false, {degrees: s.m.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.m.t[0], easing: easeIn}, false, {degrees: s.m.t[1]}],
 
-      [null, false, null, {degrees: s.m.c[4]}, null, null, null, {degrees: s.m.c[4]}, null, {degrees: s.m.c[5]}, null, {degrees: s.m.c[0]}, null, null, null, null, null, null, null, {degrees: s.m.c[4]}],
-      [null, false, { step: lift.femur, easing: easeOut }, {degrees: s.m.f[4], easing: easeIn}, null, null, null, {degrees: s.m.f[4]}, null, {degrees: s.m.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.m.f[0], easing: easeIn}, null, null, null, null, null, null, null, {degrees: s.m.f[4]}],
-      [null, false, { step: lift.tibia, easing: easeOut }, {degrees: s.m.t[4], easing: easeIn}, null, null, null, {degrees: s.m.t[4]}, null, {degrees: s.m.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.m.t[0], easing: easeIn}, null, null, null, null, null, null, null, {degrees: s.m.t[4]}],
+      [null, false, false, {degrees: s.m.c[4]}, false, false, false, {degrees: s.m.c[4]}, false, {degrees: s.m.c[5]}, false, {degrees: s.m.c[0]}, false, false, false, false, false, false, false, {degrees: s.m.c[4]}],
+      [null, false, { step: lift.femur, easing: easeOut }, {degrees: s.m.f[4], easing: easeIn}, false, false, false, {degrees: s.m.f[4]}, false, {degrees: s.m.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.m.f[0], easing: easeIn}, false, false, false, false, false, false, false, {degrees: s.m.f[4]}],
+      [null, false, { step: lift.tibia, easing: easeOut }, {degrees: s.m.t[4], easing: easeIn}, false, false, false, {degrees: s.m.t[4]}, false, {degrees: s.m.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.m.t[0], easing: easeIn}, false, false, false, false, false, false, false, {degrees: s.m.t[4]}],
 
-      [null, null, false, null, {degrees: s.r.c[3]}, null, null, {degrees: s.r.c[3]}, null, null, null, {degrees: s.r.c[5]}, null, {degrees: s.r.c[0]}, null, null, null, null, null, {degrees: s.r.c[3]}],
-      [null, null, false, { step: lift.femur, easing: easeOut }, {degrees: s.r.f[3], easing: easeIn}, null, null, {degrees: s.r.f[3]}, null, null, null, {degrees: s.r.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.r.f[0], easing: easeIn}, null, null, null, null, null, {degrees: s.r.f[3]}],
-      [null, null, false, { step: lift.tibia, easing: easeOut }, {degrees: s.r.t[3], easing: easeIn}, null, null, {degrees: s.r.t[3]}, null, null, null, {degrees: s.r.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.r.t[0], easing: easeIn}, null, null, null, null, null, {degrees: s.r.t[3]}],
+      [null, false, false, false, {degrees: s.r.c[3]}, false, false, {degrees: s.r.c[3]}, false, false, false, {degrees: s.r.c[5]}, false, {degrees: s.r.c[0]}, false, false, false, false, false, {degrees: s.r.c[3]}],
+      [null, false, false, { step: lift.femur, easing: easeOut }, {degrees: s.r.f[3], easing: easeIn}, false, false, {degrees: s.r.f[3]}, false, false, false, {degrees: s.r.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.r.f[0], easing: easeIn}, false, false, false, false, false, {degrees: s.r.f[3]}],
+      [null, false, false, { step: lift.tibia, easing: easeOut }, {degrees: s.r.t[3], easing: easeIn}, false, false, {degrees: s.r.t[3]}, false, false, false, {degrees: s.r.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.r.t[0], easing: easeIn}, false, false, false, false, false, {degrees: s.r.t[3]}],
 
-      [null, null, null, null, null, false, null, {degrees: s.r.c[0]}, null, null, null, null, null, null, null, null, null, {degrees: s.r.c[5]}, null, {degrees: s.r.c[0]}],
-      [null, null, null, null, null, false, { step: lift.femur, easing: easeOut }, {degrees: s.r.f[0], easing: easeIn}, null, null, null, null, null, null, null, null, null, {degrees: s.r.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.r.f[0], easing: easeIn}],
-      [null, null, null, null, null, false, { step: lift.tibia, easing: easeOut }, {degrees: s.r.t[0], easing: easeIn}, null, null, null, null, null, null, null, null, null, {degrees: s.r.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.r.t[0], easing: easeIn}]
+      [null, false, false, false, false, false, false, {degrees: s.r.c[0]}, false, false, false, false, false, false, false, false, false, {degrees: s.r.c[5]}, false, {degrees: s.r.c[0]}],
+      [null, false, false, false, false, false, { step: lift.femur, easing: easeOut }, {degrees: s.r.f[0], easing: easeIn}, false, false, false, false, false, false, false, false, false, {degrees: s.r.f[5]}, { step: lift.femur, easing: easeOut }, {degrees: s.r.f[0], easing: easeIn}],
+      [null, false, false, false, false, false, { step: lift.tibia, easing: easeOut }, {degrees: s.r.t[0], easing: easeIn}, false, false, false, false, false, false, false, false, false, {degrees: s.r.t[5]}, { step: lift.tibia, easing: easeOut }, {degrees: s.r.t[0], easing: easeIn}]
     ]
   };
 
@@ -249,17 +254,17 @@ var Actions = function(phoenix) {
       oncomplete: function() { },
       keyFrames: [
 
-        [null, null, null, null, false, null, {degrees: h.f.c[a]}, false, {degrees: h.f.c[1]}, {degrees: h.f.c[b]}],
-        [null, null, null, null, false, { step: lift.femur, easing: easeOut }, {degrees: h.f.f[a]}, false, {degrees: h.f.f[1]}, {degrees: h.f.f[b]}],
-        [null, null, null, null, false, { step: lift.tibia, easing: easeOut }, {degrees: h.f.t[a]}, false, {degrees: h.f.t[1]}, {degrees: h.f.t[b]}],
+        [null, false, false, false, false, false, {degrees: h.f.c[a]}, false, {degrees: h.f.c[1]}, {degrees: h.f.c[b]}],
+        [null, false, false, false, false, { step: lift.femur, easing: easeOut }, {degrees: h.f.f[a]}, false, {degrees: h.f.f[1]}, {degrees: h.f.f[b]}],
+        [null, false, false, false, false, { step: lift.tibia, easing: easeOut }, {degrees: h.f.t[a]}, false, {degrees: h.f.t[1]}, {degrees: h.f.t[b]}],
 
-        [null, null, false, null, {degrees: h.m.c[a]}, null, null, false, {degrees: h.m.c[1]}, {degrees: h.m.c[b]}],
-        [null, null, false, { step: lift.femur, easing: easeOut }, {degrees: h.m.f[a]}, null, null, false, {degrees: h.m.f[1]}, {degrees: h.m.f[b]}],
-        [null, null, false, { step: lift.tibia, easing: easeOut }, {degrees: h.m.t[a]}, null, null, false, {degrees: h.m.t[1]}, {degrees: h.m.t[b]}],
+        [null, false, false, false, {degrees: h.m.c[a]}, false, false, false, {degrees: h.m.c[1]}, {degrees: h.m.c[b]}],
+        [null, false, false, { step: lift.femur, easing: easeOut }, {degrees: h.m.f[a]}, false, false, false, {degrees: h.m.f[1]}, {degrees: h.m.f[b]}],
+        [null, false, false, { step: lift.tibia, easing: easeOut }, {degrees: h.m.t[a]}, false, false, false, {degrees: h.m.t[1]}, {degrees: h.m.t[b]}],
 
-        [null, null, {degrees: h.r.c[b]}, null, null, null, null, false, {degrees: h.r.c[1]}, {degrees: h.r.c[a]}],
-        [null, { step: lift.femur, easing: easeOut },  {degrees: h.r.f[b]}, null, null, null, null, false, {degrees: h.r.f[1]}, {degrees: h.r.f[a]}],
-        [null, { step: lift.tibia, easing: easeOut }, {degrees: h.r.t[b]}, null, null, null, null, false, {degrees: h.r.t[1]}, {degrees: h.r.t[a]}],
+        [null, false, {degrees: h.r.c[b]}, false, false, false, false, false, {degrees: h.r.c[1]}, {degrees: h.r.c[a]}],
+        [null, { step: lift.femur, easing: easeOut },  {degrees: h.r.f[b]}, false, false, false, false, false, {degrees: h.r.f[1]}, {degrees: h.r.f[a]}],
+        [null, { step: lift.tibia, easing: easeOut }, {degrees: h.r.t[b]}, false, false, false, false, false, {degrees: h.r.t[1]}, {degrees: h.r.t[a]}],
 
       ]
     });
@@ -280,17 +285,17 @@ var Actions = function(phoenix) {
       onstop: function() { phoenix.att(); },
       oncomplete: function() { },
       keyFrames: [
-        [null, null, {degrees: h.f.c[a]}, null, null, null, null, false, {degrees: h.f.c[1]}, {degrees: h.f.c[b]}],
-        [null, { step: lift.femur, easing: easeOut },  {degrees: h.f.f[a]}, null, null, null, null, false, {degrees: h.f.f[1]}, {degrees: h.f.f[b]}],
-        [null, { step: lift.tibia, easing: easeOut }, {degrees: h.f.t[a]}, null, null, null, null, false, {degrees: h.f.t[1]}, {degrees: h.f.t[b]}],
+        [null, false, {degrees: h.f.c[a]}, false, false, false, false, false, {degrees: h.f.c[1]}, {degrees: h.f.c[b]}],
+        [null, { step: lift.femur, easing: easeOut },  {degrees: h.f.f[a]}, false, false, false, false, false, {degrees: h.f.f[1]}, {degrees: h.f.f[b]}],
+        [null, { step: lift.tibia, easing: easeOut }, {degrees: h.f.t[a]}, false, false, false, false, false, {degrees: h.f.t[1]}, {degrees: h.f.t[b]}],
 
-        [null, null, false, null, {degrees: h.m.c[a]}, null, null, false, {degrees: h.m.c[1]}, {degrees: h.m.c[b]}],
-        [null, null, false, { step: lift.femur, easing: easeOut }, {degrees: h.m.f[a]}, null, null, false, {degrees: h.m.f[1]}, {degrees: h.m.f[b]}],
-        [null, null, false, { step: lift.tibia, easing: easeOut }, {degrees: h.m.t[a]}, null, null, false, {degrees: h.m.t[1]}, {degrees: h.m.t[b]}],
+        [null, false, false, false, {degrees: h.m.c[a]}, false, false, false, {degrees: h.m.c[1]}, {degrees: h.m.c[b]}],
+        [null, false, false, { step: lift.femur, easing: easeOut }, {degrees: h.m.f[a]}, false, false, false, {degrees: h.m.f[1]}, {degrees: h.m.f[b]}],
+        [null, false, false, { step: lift.tibia, easing: easeOut }, {degrees: h.m.t[a]}, false, false, false, {degrees: h.m.t[1]}, {degrees: h.m.t[b]}],
 
-        [null, null, null, null, false, null, {degrees: h.r.c[b]}, false, {degrees: h.r.c[1]}, {degrees: h.r.c[a]}],
-        [null, null, null, null, false, { step: lift.femur, easing: easeOut }, {degrees: h.r.f[b]}, false, {degrees: h.r.f[1]}, {degrees: h.r.f[a]}],
-        [null, null, null, null, false, { step: lift.tibia, easing: easeOut }, {degrees: h.r.t[b]}, false, {degrees: h.r.t[1]}, {degrees: h.r.t[a]}],
+        [null, false, false, false, false, false, {degrees: h.r.c[b]}, false, {degrees: h.r.c[1]}, {degrees: h.r.c[a]}],
+        [null, false, false, false, false, { step: lift.femur, easing: easeOut }, {degrees: h.r.f[b]}, false, {degrees: h.r.f[1]}, {degrees: h.r.f[a]}],
+        [null, false, false, false, false, { step: lift.tibia, easing: easeOut }, {degrees: h.r.t[b]}, false, {degrees: h.r.t[1]}, {degrees: h.r.t[a]}],
       ]
     });
     return this;
@@ -309,29 +314,29 @@ var Actions = function(phoenix) {
       loopback: 0.5,
       onstop: function() { phoenix.att(); },
       keyFrames: [
-        [ null, null, {degrees: t.f.c[a]}, null, {degrees: t.f.c[b]}, null, {degrees: t.f.c[a]}],
-        [ null, null, {degrees: t.f.f[a]}, { step: lift.femur, easing: easeOut }, {degrees: t.f.f[b]}, null, {degrees: t.f.f[a]}],
-        [ null, null, {degrees: t.f.t[a]}, { step: lift.tibia, easing: easeOut }, {degrees: t.f.t[b]}, null, {degrees: t.f.t[a]}],
+        [ null, false, {degrees: t.f.c[a]}, false, {degrees: t.f.c[b]}, false, {degrees: t.f.c[a]}],
+        [ null, false, {degrees: t.f.f[a]}, { step: lift.femur, easing: easeOut }, {degrees: t.f.f[b]}, false, {degrees: t.f.f[a]}],
+        [ null, false, {degrees: t.f.t[a]}, { step: lift.tibia, easing: easeOut }, {degrees: t.f.t[b]}, false, {degrees: t.f.t[a]}],
 
-        [ null, null, {degrees: t.f.c[a]}, null, {degrees: t.f.c[b]}, null, {degrees: t.f.c[a]}],
-        [ null, { step: lift.femur, easing: easeOut }, {degrees: t.f.f[a], easing: easeIn}, null, {degrees: t.f.f[b], easing: easeIn}, { step: lift.femur, easing: easeOut }, {degrees: t.f.f[a], easing: easeIn}],
-        [ null, { step: lift.tibia, easing: easeOut }, {degrees: t.f.t[a], easing: easeIn}, null, {degrees: t.f.t[b], easing: easeIn}, { step: lift.tibia, easing: easeOut }, {degrees: t.f.t[a], easing: easeIn}],
+        [ null, false, {degrees: t.f.c[a]}, false, {degrees: t.f.c[b]}, false, {degrees: t.f.c[a]}],
+        [ null, { step: lift.femur, easing: easeOut }, {degrees: t.f.f[a], easing: easeIn}, false, {degrees: t.f.f[b], easing: easeIn}, { step: lift.femur, easing: easeOut }, {degrees: t.f.f[a], easing: easeIn}],
+        [ null, { step: lift.tibia, easing: easeOut }, {degrees: t.f.t[a], easing: easeIn}, false, {degrees: t.f.t[b], easing: easeIn}, { step: lift.tibia, easing: easeOut }, {degrees: t.f.t[a], easing: easeIn}],
 
-        [ null, null, {degrees: t.m.c[b]}, null, {degrees: t.m.c[a]}, null, {degrees: t.m.c[b]}],
-        [ null, { step: lift.femur, easing: easeOut }, {degrees: t.m.f[b], easing: easeIn}, null, {degrees: t.m.f[a], easing: easeIn}, { step: lift.femur, easing: easeOut }, {degrees: t.m.f[b], easing: easeIn}],
-        [ null, { step: lift.tibia, easing: easeOut }, {degrees: t.m.t[b], easing: easeIn}, null, {degrees: t.m.t[a], easing: easeIn}, { step: lift.tibia, easing: easeOut }, {degrees: t.m.t[b], easing: easeIn}],
+        [ null, false, {degrees: t.m.c[b]}, false, {degrees: t.m.c[a]}, false, {degrees: t.m.c[b]}],
+        [ null, { step: lift.femur, easing: easeOut }, {degrees: t.m.f[b], easing: easeIn}, false, {degrees: t.m.f[a], easing: easeIn}, { step: lift.femur, easing: easeOut }, {degrees: t.m.f[b], easing: easeIn}],
+        [ null, { step: lift.tibia, easing: easeOut }, {degrees: t.m.t[b], easing: easeIn}, false, {degrees: t.m.t[a], easing: easeIn}, { step: lift.tibia, easing: easeOut }, {degrees: t.m.t[b], easing: easeIn}],
 
-        [ null, null, {degrees: t.m.c[b]}, null, {degrees: t.m.c[a]}, null, {degrees: t.m.c[b]}],
-        [ null, null, {degrees: t.m.f[b]}, { step: lift.femur, easing: easeOut }, {degrees: t.m.f[a]}, null, {degrees: t.m.f[b]}],
-        [ null, null, {degrees: t.m.t[b]}, { step: lift.tibia, easing: easeOut }, {degrees: t.m.t[a]}, null, {degrees: t.m.t[b]}],
+        [ null, false, {degrees: t.m.c[b]}, false, {degrees: t.m.c[a]}, false, {degrees: t.m.c[b]}],
+        [ null, false, {degrees: t.m.f[b]}, { step: lift.femur, easing: easeOut }, {degrees: t.m.f[a]}, false, {degrees: t.m.f[b]}],
+        [ null, false, {degrees: t.m.t[b]}, { step: lift.tibia, easing: easeOut }, {degrees: t.m.t[a]}, false, {degrees: t.m.t[b]}],
 
-        [ null, null, {degrees: t.r.c[b]}, null, {degrees: t.r.c[a]}, null, {degrees: t.r.c[b]}],
-        [ null, null, {degrees: t.r.f[b]}, { step: lift.femur, easing: easeOut }, {degrees: t.r.f[a]}, null, {degrees: t.r.f[b]}],
-        [ null, null, {degrees: t.r.t[b]}, { step: lift.tibia, easing: easeOut }, {degrees: t.r.t[a]}, null, {degrees: t.r.t[b]}],
+        [ null, false, {degrees: t.r.c[b]}, false, {degrees: t.r.c[a]}, false, {degrees: t.r.c[b]}],
+        [ null, false, {degrees: t.r.f[b]}, { step: lift.femur, easing: easeOut }, {degrees: t.r.f[a]}, false, {degrees: t.r.f[b]}],
+        [ null, false, {degrees: t.r.t[b]}, { step: lift.tibia, easing: easeOut }, {degrees: t.r.t[a]}, false, {degrees: t.r.t[b]}],
 
-        [ null, null, {degrees: t.r.c[b]}, null, {degrees: t.r.c[a]}, null, {degrees: t.r.c[b]}],
-        [ null, { step: lift.femur, easing: easeOut }, {degrees: t.r.f[b], easing: easeIn}, null, {degrees: t.r.f[a], easing: easeIn}, { step: lift.femur, easing: easeOut }, {degrees: t.r.f[b], easing: easeIn}],
-        [ null, { step: lift.tibia, easing: easeOut }, {degrees: t.r.t[b], easing: easeIn}, null, {degrees: t.r.t[a], easing: easeIn}, { step: lift.tibia, easing: easeOut }, {degrees: t.r.t[b], easing: easeIn}]
+        [ null, false, {degrees: t.r.c[b]}, false, {degrees: t.r.c[a]}, false, {degrees: t.r.c[b]}],
+        [ null, { step: lift.femur, easing: easeOut }, {degrees: t.r.f[b], easing: easeIn}, false, {degrees: t.r.f[a], easing: easeIn}, { step: lift.femur, easing: easeOut }, {degrees: t.r.f[b], easing: easeIn}],
+        [ null, { step: lift.tibia, easing: easeOut }, {degrees: t.r.t[b], easing: easeIn}, false, {degrees: t.r.t[a], easing: easeIn}, { step: lift.tibia, easing: easeOut }, {degrees: t.r.t[b], easing: easeIn}]
       ]
     });
 
@@ -355,7 +360,7 @@ var Actions = function(phoenix) {
       work[i].offset = Math.abs(phoenix[leg.name+"f"].last.reqDegrees - leg.home);
     });
 
-    var moving = _.max(work, function(leg){ return leg.offset; });
+    var moving = Math.max(work, function(leg){ return leg.offset; });
 
     if (moving.name === "r2" || moving.name === "l1" || moving.name === "l3") {
       grouped = [ [1, 3, 5], [0, 2, 4] ];
