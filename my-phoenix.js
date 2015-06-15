@@ -47,53 +47,52 @@ positions.setPositions();
 // 
 // param: the 'phoenix' object (could probably be referent to 'this'?)
 //
-var setupLegs = function(p) {
-
-    // set no-op defaults so we can add servos/legs incrementally during development
-    joints.setupJoints(p);
-
-    // Servo pin assignments (override any defaults)
+var assignServos = function() {
 
     // Right front leg
-    p.r1c = new five.Servo({pin:0, offset: 0, startAt: l.c, range: [50, 180], isInverted: true });
-    p.r1f = new five.Servo({pin:1, offset: 0, startAt:  l.f, range: [25, 165] });
-    p.r1t = new five.Servo({pin:2, offset: 0, startAt: l.t });
-    p.r1 = new five.Servo.Array([ p.r1c, p.r1f, p.r1t ]);
+    phoenix.r1c = new five.Servo({pin:0, offset: 0, startAt: l.c, range: [50, 180], isInverted: true });
+    phoenix.r1f = new five.Servo({pin:1, offset: 0, startAt:  l.f, range: [25, 165] });
+    phoenix.r1t = new five.Servo({pin:2, offset: 0, startAt: l.t });
+    phoenix.r1 = new five.Servo.Array([ phoenix.r1c, phoenix.r1f, phoenix.r1t ]);
 
     // Left front leg
-    p.l1c = new five.Servo({pin:3, offset: 0, startAt: l.c, range: [50, 180], isInverted: false});
-    p.l1f = new five.Servo({pin:4, offset: 0, startAt:  l.f, range: [25, 165] });
-    p.l1t = new five.Servo({pin:5, offset: 0, startAt: l.t });
-    p.l1 = new five.Servo.Array([ p.l1c, p.l1f, p.l1t ]);
+    phoenix.l1c = new five.Servo({pin:3, offset: 0, startAt: l.c, range: [50, 180], isInverted: false});
+    phoenix.l1f = new five.Servo({pin:4, offset: 0, startAt:  l.f, range: [25, 165] });
+    phoenix.l1t = new five.Servo({pin:5, offset: 0, startAt: l.t });
+    phoenix.l1 = new five.Servo.Array([ phoenix.l1c, phoenix.l1f, phoenix.l1t ]);
 
     // end servo assignments
 
 }
 
-
-var mb = new MaestroIOBoard(maestro, PololuMaestro.TYPES.MICRO_MAESTRO, [
+var maestroType = PololuMaestro.TYPES.MICRO_MAESTRO; 
+var maestroPins = [
       IOBoard.CONSTANTS.MODES.SERVO,
       IOBoard.CONSTANTS.MODES.SERVO,
       IOBoard.CONSTANTS.MODES.SERVO,
       IOBoard.CONSTANTS.MODES.SERVO,
       IOBoard.CONSTANTS.MODES.SERVO,
       IOBoard.CONSTANTS.MODES.SERVO
-  ], function(br) {
-    // console.log("maestroIOBoard callsback: " + util.inspect(br));
+];
 
-    // var board = new five.Board({ io: br });
+
+var mb = new MaestroIOBoard(maestro, maestroType, maestroPins, function(br) {
+
     board = new five.Board({ io: br }).on("ready", function() {
-      
-      setupLegs(phoenix);
+
+      // set no-op defaults so we can add servos/legs incrementally during development
+      joints.setup(phoenix);
+
+      assignServos();
+
       legsAnimation = new five.Animation(phoenix.legs);
 
-      actions(phoenix);
+      actions.setup(phoenix);
 
+      // Inject the `ph` object into the Repl instance's context
+      this.repl.inject({
+        ph: phoenix
+      });
 
-  // Inject the `ph` object into the Repl instance's context
-  this.repl.inject({
-     ph: phoenix
   });
-
-});
 });

@@ -1,6 +1,6 @@
 var   five = require("johnny-five");
 
-var setupJoints = function(phoenix) {
+var setup = function(phoenix) {
 
     // deal with unassigned stuff... there must be an easier way to do this, like method_missing?.
     for (side of ['r', 'l']) {
@@ -53,4 +53,4 @@ var setupJoints = function(phoenix) {
 
 }
 
-module.exports =  {setupJoints: setupJoints} ;
+module.exports =  {setup: setup} ;
