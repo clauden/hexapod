@@ -1,11 +1,17 @@
+//
+// declare actions and their associated animations
+//
 
-var temporal = require("temporal");
+require('underscore');
+var temporal = require('temporal');
 
-var Actions = function(phoenix) {
+var setActions = function(phoenix) {
 
   var easeIn = "inQuad",
       easeOut = "outQuad",
       easeInOut = "inOutQuad";
+
+  legsAnimation = new require('johnny-five').Animation(phoenix.legs);
 
   // Return to home position
   phoenix.att = function() {
@@ -23,7 +29,7 @@ var Actions = function(phoenix) {
       work[i].offset = Math.abs(phoenix[leg.name+"f"].last.reqDegrees - leg.home);
     });
 
-    var moving = Math.max(work, function(leg){ return leg.offset; });
+    var moving = _.max(work, function(leg){ return leg.offset; });
 
     if (moving.name === "r2" || moving.name === "l1" || moving.name === "l3") {
       grouped = [ [1, 3, 5], [0, 2, 4] ];
@@ -427,7 +433,7 @@ var Actions = function(phoenix) {
 
 }
 
-module.exports = Actions;
-// {
-//   setActions: setActions
-// };
+// module.exports = actions;
+module.exports = {
+  setup: setActions
+};
