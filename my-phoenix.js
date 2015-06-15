@@ -16,7 +16,7 @@
 
 
 var   five = require("johnny-five"),
-      temporal = require("temporal"),
+      // temporal = require("temporal"),
       util = require("util"),
       IOBoard = require("ioboard"),
       MaestroIOBoard = require("maestro-ioboard"),
@@ -26,10 +26,9 @@ var   five = require("johnny-five"),
       PololuMaestro = require("pololu-maestro");
 
 var   board, phoenix = { state: "sleep" };
-
-      easeIn = "inQuad",
-      easeOut = "outQuad",
-      easeInOut = "inOutQuad";
+      // easeIn = "inQuad",
+      // easeOut = "outQuad",
+      // easeInOut = "inOutQuad";
 
 // FTDI Friend to Maestro TTL
 // var tty = "/dev/tty.usbserial-A703X390";
@@ -50,15 +49,15 @@ positions.setPositions();
 var assignServos = function() {
 
     // Right front leg
-    phoenix.r1c = new five.Servo({pin:0, offset: 0, startAt: l.c, range: [50, 180], isInverted: true });
+    phoenix.r1c = new five.Servo({pin:0, offset: 0, startAt: l.c, range: [50, 180], isInverted: false});
     phoenix.r1f = new five.Servo({pin:1, offset: 0, startAt:  l.f, range: [25, 165] });
     phoenix.r1t = new five.Servo({pin:2, offset: 0, startAt: l.t });
     phoenix.r1 = new five.Servo.Array([ phoenix.r1c, phoenix.r1f, phoenix.r1t ]);
 
     // Left front leg
-    phoenix.l1c = new five.Servo({pin:3, offset: 0, startAt: l.c, range: [50, 180], isInverted: false});
-    phoenix.l1f = new five.Servo({pin:4, offset: 0, startAt:  l.f, range: [25, 165] });
-    phoenix.l1t = new five.Servo({pin:5, offset: 0, startAt: l.t });
+    phoenix.l1c = new five.Servo({pin:3, offset: 0, startAt: l.c, range: [50, 180], isInverted: true});
+    phoenix.l1f = new five.Servo({pin:4, offset: 0, startAt:  l.f, range: [25, 165], isInverted: true});
+    phoenix.l1t = new five.Servo({pin:5, offset: 0, startAt: l.t, isInverted: true });
     phoenix.l1 = new five.Servo.Array([ phoenix.l1c, phoenix.l1f, phoenix.l1t ]);
 
     // end servo assignments
@@ -80,12 +79,18 @@ var mb = new MaestroIOBoard(maestro, maestroType, maestroPins, function(br) {
 
     board = new five.Board({ io: br }).on("ready", function() {
 
-      // set no-op defaults so we can add servos/legs incrementally during development
-      joints.setup(phoenix);
-
       assignServos();
 
+      // set no-op defaults so we can add servos/legs incrementally during development
+      joints.setup(phoenix);
       legsAnimation = new five.Animation(phoenix.legs);
+
+      console.log("========= R1C ============\n" + phoenix.l1c);
+      console.log("=====================");
+      console.log("========= L4C ============\n" + phoenix.l4c);
+      console.log("=====================");
+      console.log(phoenix.coxa);
+      // process.exit(1);
 
       actions.setup(phoenix);
 
