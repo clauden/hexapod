@@ -26,15 +26,13 @@ var   five = require("johnny-five"),
       PololuMaestro = require("pololu-maestro");
 
 var   board, phoenix = { state: "sleep" };
-      // easeIn = "inQuad",
-      // easeOut = "outQuad",
-      // easeInOut = "inOutQuad";
 
 // FTDI Friend to Maestro TTL
 // var tty = "/dev/tty.usbserial-A703X390";
 
 // Maestro Dual Port mode on mac
-var tty = "/dev/cu.usbmodem00087311";
+// var tty = "/dev/cu.usbmodem00087311";  // micro
+var tty = "/dev/cu.usbmodem00113561"      // maestro 24
 
 var maestro = new PololuMaestro(tty, 19200);
 
@@ -60,12 +58,44 @@ var assignServos = function() {
     phoenix.l1t = new five.Servo({pin:5, offset: 0, startAt: l.t, isInverted: true });
     phoenix.l1 = new five.Servo.Array([ phoenix.l1c, phoenix.l1f, phoenix.l1t ]);
 
+    //Right rear leg
+    phoenix.r3c = new five.Servo({pin:6, offset: 0, startAt: l.c, range: [50, 180]});
+    phoenix.r3f = new five.Servo({pin:7, offset: 0, startAt: l.f, range: [25, 165] });
+    phoenix.r3t = new five.Servo({pin:8, offset: 0, startAt: l.t });
+    phoenix.r3 = new five.Servo.Array([ phoenix.r3c, phoenix.r3f, phoenix.r3t ]);
+
+    //Left rear leg
+    phoenix.l3c = new five.Servo({pin:9, offset: 0, startAt: l.c, range: [50, 180], isInverted: true });
+    phoenix.l3f = new five.Servo({pin:10, offset: 0, startAt: l.f, range: [25, 165], isInverted: true });
+    phoenix.l3t = new five.Servo({pin:11, offset: 0, startAt: l.t, isInverted: true });
+    phoenix.l3 = new five.Servo.Array([ phoenix.l3c, phoenix.l3f, phoenix.l3t ]);
+
     // end servo assignments
 
 }
 
-var maestroType = PololuMaestro.TYPES.MICRO_MAESTRO; 
+var maestroType = PololuMaestro.TYPES.MINI_MAESTRO_24; 
+// var maestroType = PololuMaestro.TYPES.MICRO_MAESTRO; 
+
 var maestroPins = [
+      IOBoard.CONSTANTS.MODES.SERVO,
+      IOBoard.CONSTANTS.MODES.SERVO,
+      IOBoard.CONSTANTS.MODES.SERVO,
+      IOBoard.CONSTANTS.MODES.SERVO,
+      IOBoard.CONSTANTS.MODES.SERVO,
+      IOBoard.CONSTANTS.MODES.SERVO,
+      IOBoard.CONSTANTS.MODES.SERVO,
+      IOBoard.CONSTANTS.MODES.SERVO,
+      IOBoard.CONSTANTS.MODES.SERVO,
+      IOBoard.CONSTANTS.MODES.SERVO,
+      IOBoard.CONSTANTS.MODES.SERVO,
+      IOBoard.CONSTANTS.MODES.SERVO,
+      IOBoard.CONSTANTS.MODES.SERVO,
+      IOBoard.CONSTANTS.MODES.SERVO,
+      IOBoard.CONSTANTS.MODES.SERVO,
+      IOBoard.CONSTANTS.MODES.SERVO,
+      IOBoard.CONSTANTS.MODES.SERVO,
+      IOBoard.CONSTANTS.MODES.SERVO,
       IOBoard.CONSTANTS.MODES.SERVO,
       IOBoard.CONSTANTS.MODES.SERVO,
       IOBoard.CONSTANTS.MODES.SERVO,
@@ -96,7 +126,10 @@ var mb = new MaestroIOBoard(maestro, maestroType, maestroPins, function(br) {
 
       // Inject the `ph` object into the Repl instance's context
       this.repl.inject({
-        ph: phoenix
+        ph: phoenix,
+        wr: phoenix.waveRight,
+        wl: phoenix.waveLeft
+        
       });
 
   });
