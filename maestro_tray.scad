@@ -7,8 +7,8 @@ outerY = innerY + 2 * cornerInset;
 lipWidth = 5;
 rimHeight = 2;
 trayDepth = 15;
-trayBottomThickness = 7;
-trayWallThickness = 1;
+trayBottomThickness = 5;
+trayWallThickness = 2.5;
 
 boardX = 59;
 boardY = 28;
@@ -16,6 +16,54 @@ boardOffsetX = 10;
 
 screwDiameter = 3;
 standoffHeight = trayDepth - 5;
+
+module fullTray() {
+    
+    translate([0,0,-(trayDepth + trayBottomThickness)])
+        cube([outerX, outerY, trayDepth + trayBottomThickness]);
+}
+
+module corneredTray() {
+    color("pink") 
+    difference() {
+        fullTray();
+        
+        // cut out corners
+        translate([-1,-1,-(trayDepth + trayBottomThickness + 1)])
+            cube([cornerInset+1, cornerInset+1, 2 * trayDepth]);
+        translate([-1, outerY - cornerInset ,-(trayDepth + trayBottomThickness + 1)])
+            cube([cornerInset+1, cornerInset+1, 2 * trayDepth]);
+        translate([outerX - cornerInset,-1,-(trayDepth + trayBottomThickness + 1)])
+            cube([cornerInset+1, cornerInset+1, 2 * trayDepth]);
+        translate([outerX - cornerInset, outerY - cornerInset ,-(trayDepth + trayBottomThickness + 1)])
+            cube([cornerInset+1, cornerInset+1, 2 * trayDepth]);
+        
+    }
+}
+
+module fullTrayShell() {
+    difference() {
+        corneredTray();
+        
+        // cut out inner horizontal
+        translate([cornerInset + trayWallThickness, trayWallThickness,-(trayDepth-trayBottomThickness)])
+           cube([outerX - 2*cornerInset - 2*trayWallThickness, 
+                 outerY -  2*trayWallThickness, 
+                 trayDepth+1]);
+        
+        // cut out inner vertical
+        translate([trayWallThickness, cornerInset + trayWallThickness,-(trayDepth - trayBottomThickness)])
+           cube([outerX - 2*trayWallThickness, 
+                 outerY - 2*cornerInset - 2*trayWallThickness, 
+                 trayDepth]);
+
+    //    translate([trayWallThickness,trayWallThickness,-trayDepth])
+    //        cube([outerX - 2*trayWallThickness, outerY - 2*trayWallThickness, trayDepth]);
+    }
+}
+
+fullTrayShell();
+upperRim();
 
 module upperRim() {
     difference() {
@@ -60,7 +108,9 @@ module standoff() {
 
 module standoffs() {
     // ???
-    translate([17.3 + boardOffsetX, lipWidth + cornerInset + boardY - 2.8, -trayDepth])
+    translate([17.3 + 38 + boardOffsetX + lipWidth, lipWidth + cornerInset + boardY - 2.8, -trayDepth])
+        standoff();
+    translate([17.3 + boardOffsetX + lipWidth, lipWidth + cornerInset + boardY - 2.8, -trayDepth])
         standoff();
 }
 
@@ -68,8 +118,8 @@ module standoffs() {
 
 difference() {
     union() {
-        upperRim();
-        lowerTray();
+        // upperRim();
+        // lowerTray();
     }
     screwHoles();
 }
