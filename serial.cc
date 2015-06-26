@@ -5,13 +5,10 @@
 // 5. Serial Interface Page 47 of 73
 
 #include <fcntl.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#ifdef _WIN32
-#define O_NOCTTY 0
-#else
 #include <termios.h>
-#endif
 
 // Gets the position of a Maestro channel.
 // See the "Serial Servo Commands" section of the user's guide.
@@ -45,15 +42,13 @@ int maestroSetTarget(int fd, unsigned char channel, unsigned short target)
   return 0;
 }
 
-int main()
+int main(int argc, char **argv)
 {
   // Open the Maestro's virtual COM port.
   // const char * device = "\\\\.\\USBSER000"; // Windows, "\\\\.\\COM6" also works
-
   //const char * device = "/dev/ttyACM0"; // Linux
 
-
-  const char * device = "/dev/cu.usbmodem00087313"; // Mac OS X
+  const char * device = argc > 1 ? argv[1] : "/dev/cu.usbmodem00087311";    // Mac OS X
 
   int fd = open(device, O_RDWR | O_NOCTTY);
   if (fd == -1) {
@@ -61,16 +56,43 @@ int main()
     return 1;
   }
 
-#ifndef _WIN32
   struct termios options;
   tcgetattr(fd, &options);
   options.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
   options.c_oflag &= ~(ONLCR | OCRNL);
   tcsetattr(fd, TCSANOW, &options);
-#endif
 
-  int position = maestroGetPosition(fd, 0);
-  printf("Current position is %d.\n", position);
+  // Initialize file descriptor sets
+  fd_set read_fds, write_fds, except_fds;
+  FD_ZERO(&read_fds);
+  FD_ZERO(&write_fds);
+  FD_ZERO(&except_fds);
+  FD_SET(fd, &read_fds);
+
+  // Set timeout to 1.0 seconds
+  struct timeval timeout;
+  timeout.tv_sec = 1;
+  timeout.tv_usec = 0;
+
+  int position = 0;
+
+  printf("trying prior to select...\n");
+  position = maestroGetPosition(fd, 0);
+  printf("Got it!  Current position is %d.\n", position);
+
+#if 0
+  // Wait for input to become ready or until the time out; the first parameter is
+  // 1 more than the largest file descriptor in any of the sets
+  if (select(fd + 1, &read_fds, &write_fds, &except_fds, &timeout) == 1) {
+      // fd is ready for reading
+      position = maestroGetPosition(fd, 0);
+      printf("Current position is %d.\n", position);
+  }
+  else {
+      printf("timeout on initial read\n");
+      exit(64);
+  }
+#endif
 
   int target = (position < 6000) ? 7000 : 5000;
   printf("Setting target to %d (%d us).\n", target, target/4);
