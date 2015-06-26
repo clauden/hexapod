@@ -74,29 +74,27 @@ int main(int argc, char **argv)
   timeout.tv_sec = 1;
   timeout.tv_usec = 0;
 
-  int position = 0;
+  int target = 0, position = 0, pin = 0;
+  char s[128];
+  
+  while (1) {
 
-  printf("trying prior to select...\n");
-  position = maestroGetPosition(fd, 0);
-  printf("Got it!  Current position is %d.\n", position);
+    printf("pin target (or q) > ");
+    fgets(s, sizeof(s), stdin);
+    if (*s == 'q')
+      break;
 
-#if 0
-  // Wait for input to become ready or until the time out; the first parameter is
-  // 1 more than the largest file descriptor in any of the sets
-  if (select(fd + 1, &read_fds, &write_fds, &except_fds, &timeout) == 1) {
-      // fd is ready for reading
-      position = maestroGetPosition(fd, 0);
-      printf("Current position is %d.\n", position);
+    sscanf(s, "%d %d", &pin, &target);
+    printf("About to set %d to %d\n", pin, target);
+
+    position = maestroGetPosition(fd, pin);
+    printf("Current position of %d is %d.\n", pin, position);
+
+    // target = (position < 6000) ? 7000 : 5000;
+    printf("Setting target to %d (%d us).\n", target, target/4);
+    maestroSetTarget(fd, pin, target);
   }
-  else {
-      printf("timeout on initial read\n");
-      exit(64);
-  }
-#endif
 
-  int target = (position < 6000) ? 7000 : 5000;
-  printf("Setting target to %d (%d us).\n", target, target/4);
-  maestroSetTarget(fd, 0, target);
   close(fd);
   return 0;
 }
