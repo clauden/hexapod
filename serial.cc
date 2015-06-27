@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <termios.h>
 
@@ -104,6 +105,21 @@ int positionToAngle(int maestroUnits)
   return angle;
 }
 
+void usage() {
+  printf(     \
+     "p pin-num [pin-num] value\n"
+     "p macro-name value\n"
+     "   Position where value is either an angle or a pulse width > 500 ms\n"
+     "s speed\n"
+     "   Speed global set\n"
+    "q\n"
+    "h\n"
+    "pin-num\n"
+    "    get status of pin-num\n"
+    "m macro-name pin-num [pin-num]\n"
+  ); 
+}
+
 
 int main(int argc, char **argv)
 {
@@ -118,35 +134,31 @@ int main(int argc, char **argv)
     return 1;
   }
 
+  // is this needed?
   struct termios options;
   tcgetattr(fd, &options);
   options.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
   options.c_oflag &= ~(ONLCR | OCRNL);
   tcsetattr(fd, TCSANOW, &options);
 
-  // Initialize file descriptor sets
-  fd_set read_fds, write_fds, except_fds;
-  FD_ZERO(&read_fds);
-  FD_ZERO(&write_fds);
-  FD_ZERO(&except_fds);
-  FD_SET(fd, &read_fds);
-
-  // Set timeout to 1.0 seconds
-  struct timeval timeout;
-  timeout.tv_sec = 1;
-  timeout.tv_usec = 0;
-
-  int n, angle = 0, target = 0, position = 0, pin = 0, speed;
-  char s[128], c;
+  int n, last = 0, angle = 0, targets[24], num_targets = 0, target = 0, position = 0, pin = 0, speed;
+  int num_macros = 0, *macro_values[64];
+  char *macro_names[64], s[128], c;
  
   while (1) {
 
-    printf("[pin-num [target-angle]] ['s' speed-value] ['q'] > ");
+    printf("['p' pin-num [pin_num...] target-angle] [pin-num] ['s' speed-value] ['q'] > ");
     fgets(s, sizeof(s), stdin);
   
     if (*s == 'q')
       break;
 
+    if (*s == 'h') {
+      usage();
+      continue;
+    }
+
+    // set speed globally
     if (*s == 's') {
       sscanf(s, "%c %d", &c, &speed);
       for (n = 0; n < 24; n++) {
@@ -156,8 +168,106 @@ int main(int argc, char **argv)
       continue;
     }
 
-    n = sscanf(s, "%d %d", &pin, &angle);
-    printf(">>%d\n", n);
+    if (*s == 'm') {
+      char *name = "";
+      num_targets = 0;
+
+      char *token = strtok(&s[1], " 	");
+      while (token != NULL) {
+        printf("token: %s\n", token);
+        if (!strlen(name)) {
+          name = strdup(token);
+        } else {
+          if (n = atoi(token))
+            targets[num_targets++] = n;
+          else
+            printf("??\n");
+        }
+        token = strtok(NULL, " 	,");
+      }
+
+      for (int i = 0; i < num_targets; i++)
+        printf("%d ", targets[i]);
+      printf("\n");
+ 
+      macro_names[num_macros] = name;
+
+      // first item is length of array
+      int *a = (int *) malloc((num_targets + 1) * sizeof(int));
+      a[0] = num_targets;
+      memcpy(&a[1], targets, num_targets * sizeof(int));
+      macro_values[num_macros] = a;
+      printf("%d entries\n", a[0]);
+
+      printf("%s = ", macro_names[num_macros]);
+      for (int i = 0; i < num_targets; i++)
+        printf("%d ", macro_values[num_macros][i]);
+      printf("\n");
+
+      num_macros++;
+      printf("now there are %d macros\n", num_macros);
+      continue;
+
+    }
+
+    if (*s == 'M') {
+      // char name[128];
+      // sscanf(&s[1], "%s", name);
+      
+      for (int i = 0; i < num_macros; i++) {
+        printf("%s = ", macro_names[i]);
+        for (int j = 1; j <= macro_values[i][0]; j++)
+          printf("%d ", macro_values[i][j]);
+        printf("\n");
+       } 
+       continue;
+    }
+
+
+    if (*s == 'p') {
+
+      num_targets = 0;
+      angle = SERVO_SWING_DEGREES / 2;
+
+      char *token = strtok(&s[1], " 	,");
+      while (token != NULL) {
+        printf("token: %s\n", token);
+        if (n = atoi(token)) {
+          last = n;
+          targets[num_targets++] = n;
+        }
+        token = strtok(NULL, " 	,");
+      }
+      if (num_targets > 1)
+        angle = targets[--num_targets];
+
+      printf("Check: ");
+      for (int i = 0; i < num_targets; i++)
+        printf("%d ", targets[i]);
+      printf("to %d\n", angle);
+
+      for (int i = 0; i < num_targets; i++) {
+        pin = targets[i];
+
+        position = maestroGetPosition(fd, pin);
+        printf("current position of %d is %d degrees [%d \xC2\xB5sec].\n", pin, positionToAngle(position), position);
+
+        // target = (position < 6000) ? 7000 : 5000;
+
+        if (angle < 500) {
+          target = angleToMicroseconds(angle) * 4;
+          printf("setting %d to %d degrees [%d \xC2\xB5sec].\n", pin, angle, target/4);
+        } else {
+          target = angle * 4;
+          printf("setting %d to %d \xC2\xB5sec].\n", pin, angle);
+        }
+        maestroSetTarget(fd, pin, target);
+      }
+      continue;
+    }
+    
+    // n = sscanf(s, "%d %d", &pin, &angle);
+    // printf(">>%d\n", n);
 
     // just get status of pin
     if (n < 2) {
@@ -166,17 +276,6 @@ int main(int argc, char **argv)
       continue;
     }
     
-    printf("About to set %d to angle %d\n", pin, target);
-
-    position = maestroGetPosition(fd, pin);
-    printf("Current position of %d is %d degrees [%d \xC2\xB5sec].\n", pin, positionToAngle(position), position);
-
-
-    // target = (position < 6000) ? 7000 : 5000;
-    target = angleToMicroseconds(angle) * 4;
-
-    printf("Setting target to %d degrees [%d \xC2\xB5sec].\n", angle, target/4);
-    maestroSetTarget(fd, pin, target);
   }
 
   close(fd);
