@@ -11,6 +11,8 @@
 #include <unistd.h>
 #include <termios.h>
 
+int debug = 0;
+
 //
 // Gets the position of a Maestro channel in quarter-microsecond units.
 //
@@ -45,7 +47,8 @@ int maestroGetErrors(int fd)
     perror("error reading");
     return -1;
   }
-  printf("\t> raw error : %d %d\n", response[0], response[1]);
+  if (response[0] | response[1])
+    printf("\t> raw error : %d %d\n", response[0], response[1]);
 
   return response[0] + 256*response[1];
 }
@@ -105,29 +108,90 @@ int positionToAngle(int maestroUnits)
   return angle;
 }
 
+
+void cli_usage(char **argv) {
+    fprintf(stderr,     \
+      "Usage: %s [-d device] [-i] [-h]\n"
+      "    where device is a serial port\n"
+      "    -i prints interactive prompt (default is to act as silent filter)\n"
+      "    -h is this help info\n"
+    , argv[0]);
+}
+
+
 void usage() {
   printf(     \
-     "p pin-num [pin-num] value\n"
-     "p macro-name value\n"
-     "   Position where value is either an angle or a pulse width > 500 ms\n"
-     "s speed\n"
-     "   Speed global set\n"
-    "q\n"
-    "h\n"
-    "pin-num\n"
-    "    get status of pin-num\n"
+    "p pin-num [pin-num] value\n"
+    "p macro-name value\n"
+    "   Set position, where value is either an angle or a pulse width > 500 ms\n"
+    "\n"
+    "P pin-num [pin-num]\n"
+    "P macro-name\n"
+    "   Get position(s)\n"
+    "\n"
+    "s speed\n"
+    "   Speed global set\n"
+    "\n"
+    // "pin-num\n"
+    // "    get status of pin-num\n"
     "m macro-name pin-num [pin-num]\n"
+    "   Create macro\n"
+    "\n"
+    "M macro-name\n"
+    "M\n"
+    "    List macros\n"
+    "\n"
+    "q\n"
+    "   Quit\n"
+    "\n"
+    "h\n"
+    "   Help (this info)\n"
   ); 
+}
+
+void prompt() {
+  printf("> ");
 }
 
 
 int main(int argc, char **argv)
 {
-  // const char * device = "\\\\.\\USBSER000"; // Windows, "\\\\.\\COM6" also works
-  //const char * device = "/dev/ttyACM0"; // Linux
+  // const char * device = "\\\\.\\USBSER000";  // Windows, "\\\\.\\COM6" also works
+  // const char * device = "/dev/ttyACM0";      // Linux
 
-  const char * device = argc > 1 ? argv[1] : "/dev/cu.usbmodem00087311";    // Mac OS X
+  int interactive = 0;
+  int n, last = 0, angle = 0, targets[24], num_targets = 0, target = 0, position = 0, pin = 0, speed;
+  int num_macros = 0, *macro_values[64];
+  char *device = "/dev/cu.usbmodem00113561", *macro_names[64], s[128], c;
+  // const char * device = argc > 1 ? argv[1] : "/dev/cu.usbmodem00087311";    // Mac OS X
 
+  while ((c = getopt (argc, argv, "d:Dhi")) != -1)
+    switch (c) {
+      case 'd':
+        device = optarg;
+        break;
+
+      case 'D':
+        debug = 1;
+        break;
+
+      case 'h':
+        cli_usage(argv);
+        exit(0);
+        break;
+
+      case 'i':
+        interactive = 1;
+        break;
+
+      default:
+        cli_usage(argv);
+        exit(1);
+        break;
+    }
+
+
+  
   int fd = open(device, O_RDWR | O_NOCTTY);
   if (fd == -1) {
     perror(device);
@@ -141,25 +205,23 @@ int main(int argc, char **argv)
   options.c_oflag &= ~(ONLCR | OCRNL);
   tcsetattr(fd, TCSANOW, &options);
 
-  int n, last = 0, angle = 0, targets[24], num_targets = 0, target = 0, position = 0, pin = 0, speed;
-  int num_macros = 0, *macro_values[64];
-  char *macro_names[64], s[128], c;
  
-  while (1) {
+  while (!feof(stdin)) {
 
-    printf("['p' pin-num [pin_num...] target-angle] [pin-num] ['s' speed-value] ['q'] > ");
+    if (interactive)  
+      prompt();
     fgets(s, sizeof(s), stdin);
   
     if (*s == 'q')
       break;
 
-    if (*s == 'h') {
+    else if (*s == 'h') {
       usage();
       continue;
     }
 
     // set speed globally
-    if (*s == 's') {
+    else if (*s == 's') {
       sscanf(s, "%c %d", &c, &speed);
       for (n = 0; n < 24; n++) {
         maestroSetSpeed(fd, n, speed);
@@ -168,7 +230,7 @@ int main(int argc, char **argv)
       continue;
     }
 
-    if (*s == 'm') {
+    else if (*s == 'm') {
       char *name = "";
       num_targets = 0;
 
@@ -186,52 +248,74 @@ int main(int argc, char **argv)
         token = strtok(NULL, " 	,");
       }
 
-      for (int i = 0; i < num_targets; i++)
-        printf("%d ", targets[i]);
-      printf("\n");
- 
+      if (debug) {
+        for (int i = 0; i < num_targets; i++)
+          printf("%d ", targets[i]);
+        printf("\n");
+      } 
       macro_names[num_macros] = name;
 
-      // first item is length of array
+      // first item in macro is length of array, the rest are pin numbers
       int *a = (int *) malloc((num_targets + 1) * sizeof(int));
       a[0] = num_targets;
       memcpy(&a[1], targets, num_targets * sizeof(int));
       macro_values[num_macros] = a;
-      printf("%d entries\n", a[0]);
 
-      printf("%s = ", macro_names[num_macros]);
-      for (int i = 0; i < num_targets; i++)
-        printf("%d ", macro_values[num_macros][i]);
-      printf("\n");
+      if (debug) {
+        printf("%d entries\n", a[0]);
+        printf("%s = ", macro_names[num_macros]);
+        for (int i = 0; i < num_targets; i++)
+          printf("%d ", macro_values[num_macros][i]);
+        printf("\n");
+      }
 
       num_macros++;
-      printf("now there are %d macros\n", num_macros);
+
+      if (debug)
+        printf("now there are %d macros\n", num_macros);
+
       continue;
 
     }
 
-    if (*s == 'M') {
-      // char name[128];
-      // sscanf(&s[1], "%s", name);
-      
-      for (int i = 0; i < num_macros; i++) {
-        printf("%s = ", macro_names[i]);
-        for (int j = 1; j <= macro_values[i][0]; j++)
-          printf("%d ", macro_values[i][j]);
-        printf("\n");
-       } 
-       continue;
+    else if (*s == 'M') {
+      char name[128];
+      int j, i = num_macros;
+
+      if (sscanf(&s[1], "%s", name) > 0) {
+
+        for (i = 0; i < num_macros; i++) {
+          if (!strcmp(name, macro_names[i]))
+            break;
+        }
+
+        if (i == num_macros) {
+          printf("Macro \'%s\' not found\n", name);
+        } else {
+          for (int j = 1; j <= macro_values[i][0]; j++)
+            printf("%d ", macro_values[i][j]);
+          printf("\n");
+        } 
+      } else { 
+        for (i = 0; i < num_macros; i++) {
+          printf("%s = ", macro_names[i]);
+          for (j = 1; j <= macro_values[i][0]; j++)
+            printf("%d ", macro_values[i][j]);
+          printf("\n");
+         } 
+      }
+      continue;
     }
 
-
-    if (*s == 'p') {
+    else if (*s == 'p') {
 
       num_targets = 0;
       angle = SERVO_SWING_DEGREES / 2;
 
       char *token = strtok(&s[1], " 	,");
       while (token != NULL) {
-        printf("token: %s\n", token);
+        if (debug)
+          printf("token: %s\n", token);
         if (n = atoi(token)) {
           last = n;
           targets[num_targets++] = n;
@@ -241,10 +325,12 @@ int main(int argc, char **argv)
       if (num_targets > 1)
         angle = targets[--num_targets];
 
-      printf("Check: ");
-      for (int i = 0; i < num_targets; i++)
-        printf("%d ", targets[i]);
-      printf("to %d\n", angle);
+      if (debug) {
+        printf("Check: ");
+        for (int i = 0; i < num_targets; i++)
+          printf("%d ", targets[i]);
+        printf("to %d\n", angle);
+      }
 
       for (int i = 0; i < num_targets; i++) {
         pin = targets[i];
@@ -266,15 +352,59 @@ int main(int argc, char **argv)
       continue;
     }
     
+    else if (*s == 'P') {
+
+      num_targets = 0;
+      angle = SERVO_SWING_DEGREES / 2;
+
+      char *token = strtok(&s[1], " 	,");
+      while (token != NULL) {
+        if (debug)
+          printf("token: %s\n", token);
+        if (n = atoi(token)) {
+          last = n;
+          targets[num_targets++] = n;
+        }
+        token = strtok(NULL, " 	,");
+      }
+      if (num_targets > 1)
+        angle = targets[--num_targets];
+
+      if (debug) {
+        printf("Check: ");
+        for (int i = 0; i < num_targets; i++)
+          printf("%d ", targets[i]);
+        printf("to %d\n", angle);
+      }
+
+      for (int i = 0; i < num_targets; i++) {
+        pin = targets[i];
+        position = maestroGetPosition(fd, pin);
+        printf("%d : %d degrees [%d \xC2\xB5sec].\n", pin, positionToAngle(position), position);
+      }
+      continue;
+    }
+    
     // n = sscanf(s, "%d %d", &pin, &angle);
     // printf(">>%d\n", n);
 
+    /****
     // just get status of pin
-    if (n < 2) {
+    else if (n < 2) {
       position = maestroGetPosition(fd, pin) / 4;
       printf("Pin %d: %s moving, position = %d \xC2\xB5sec\n", pin, "?", position);
       continue;
     }
+    *****/
+
+    else if (*s == 'h' || *s == '?')
+      usage();
+
+    else if (feof(stdin))
+      break;
+
+    else
+      printf("i don\'t know what to do\n");
     
   }
 
