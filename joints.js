@@ -8,6 +8,7 @@ var setup = function(phoenix) {
         for (joint of ['c', 'f', 't']) {
           name = "" + side + leg + joint;
           if (typeof(phoenix[name]) === 'undefined') {
+            console.log("Assigning default pin to " + name);
             phoenix[name] = new five.Servo({pin:99});
           }
         }
