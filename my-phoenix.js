@@ -27,6 +27,9 @@ var   five = require("johnny-five"),
 
 var   board, phoenix = { state: "sleep" };
 
+var   command_processor = require("./command-processor");
+
+
 // FTDI Friend to Maestro TTL
 // var tty = "/dev/tty.usbserial-A703X390";
 
@@ -146,7 +149,7 @@ var maestroPins = [
 
 var mb = new MaestroIOBoard(maestro, maestroType, maestroPins, function(br) {
 
-    board = new five.Board({ io: br }).on("ready", function() {
+    board = new five.Board({ io: br, repl: false }).on("ready", function() {
 
       assignServos();
 
@@ -154,22 +157,23 @@ var mb = new MaestroIOBoard(maestro, maestroType, maestroPins, function(br) {
       joints.setup(phoenix);
       legsAnimation = new five.Animation(phoenix.legs);
 
-      console.log("========= R1C ============\n" + phoenix.l1c);
-      console.log("=====================");
-      console.log("========= L4C ============\n" + phoenix.l4c);
-      console.log("=====================");
-      console.log(phoenix.coxa);
-      // process.exit(1);
-
       actions.setup(phoenix);
 
       // Inject the `ph` object into the Repl instance's context
-      this.repl.inject({
-        ph: phoenix,
-        wr: phoenix.waveRight,
-        wl: phoenix.waveLeft
-        
-      });
+      if (this.repl) {
+        this.repl.inject({
+          ph: phoenix,
+          wr: phoenix.waveRight,
+          wl: phoenix.waveLeft
+          
+        });
+      }
 
+      // kick off thing that listens for cmds and calls methods on phoenix
+      console.log(util.inspect(command_processor));
+      var cp = new command_processor(phoenix);
+      cp.run();
+      
+      console.log("Buh-bye");
   });
 });
