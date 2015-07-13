@@ -36,7 +36,7 @@ CommandProcessor.prototype.run = function() {
   var self = this;
 
   app.get('/wake', function(req, res) {
-    ph.wake();
+    ph.stand();
     res.sendStatus(200);
   });
 
