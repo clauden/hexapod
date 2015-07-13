@@ -27,7 +27,7 @@ var   five = require("johnny-five"),
 
 var   board, phoenix = { state: "sleep" };
 
-var   command_processor = require("./command-processor");
+var   commandProcessor = require("./command-processor");
 
 
 // FTDI Friend to Maestro TTL
@@ -170,10 +170,28 @@ var mb = new MaestroIOBoard(maestro, maestroType, maestroPins, function(br) {
       }
 
       // kick off thing that listens for cmds and calls methods on phoenix
-      console.log(util.inspect(command_processor));
-      var cp = new command_processor(phoenix);
+      console.log(util.inspect(commandProcessor));
+
+      var running = true;
+      var cp = new commandProcessor(phoenix);
+      console.log(util.inspect(cp));
+
+      var check_done = function() {
+        console.log("check_done (", running, ")");
+        if (!running) {
+          console.log("see ya");
+          process.exit();
+        }
+      }
+
+      console.log("from main: ", util.inspect(cp.emit));
+      cp.on('quit', function() {
+        running = false;
+      });
+    
       cp.run();
-      
-      console.log("Buh-bye");
+
+      // ...and check to see if it has told us to quit recently
+      setInterval(check_done, 5000);
   });
 });

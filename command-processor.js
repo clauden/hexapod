@@ -14,70 +14,85 @@
 
 var COMMAND_HTTP_PORT = 6543;
 
+// class/global vars
 var util = require('util');
 var express = require('express');
+var eventEmitter = require('events').EventEmitter;
+var util = require('util');
+
 var ph;
 var app;
 
-function CommandProcessor(phoenix) {
+CommandProcessor = function(phoenix) {
+  eventEmitter.call(this);
   ph = phoenix;
   app = express();
 }
 
+util.inherits(CommandProcessor, eventEmitter);
+
 CommandProcessor.prototype.run = function() {
 
+  var self = this;
+
   app.get('/wake', function(req, res) {
-    this.ph.wake();
+    ph.wake();
     res.sendStatus(200);
   });
 
   app.get('/quit', function(req, res) {
     res.sendStatus(200);
-    console.log("in run, app = ", util.inspect(app));
-    app.close();
+    // console.log("in quit, app = ", util.inspect(app, {depth:3}));
+    commandServer.close();
+    console.log("from CommandProcessor: ", util.inspect(self.emit));
+    self.emit('quit');
   });
 
   app.get('/sleep', function(req, res) {
-    this.ph.sleep();
+    ph.sleep();
     res.sendStatus(200);
   });
 
   app.get('/stop', function(req, res) {
-    this.ph.stop();
+    ph.stop();
     res.sendStatus(200);
   });
 
   // TODO: query parameters
   app.get('/wave', function(req, res) {
-    this.ph.wave();
+    ph.wave();
     res.sendStatus(200);
   });
 
   // TODO: query parameters
   app.get('/turn', function(req, res) {
-    this.ph.turn();
+    ph.turn();
     res.sendStatus(200);
   });
 
   // TODO: query parameters
   app.get('/walk', function(req, res) {
-    this.ph.walk();
+    ph.walk();
     res.sendStatus(200);
   });
 
   // TODO: query parameters
   app.get('/run', function(req, res) {
-    this.ph.run();
+    ph.run();
     res.sendStatus(200);
   });
 
   // TODO: query parameters
   app.get('/row', function(req, res) {
-    this.ph.row();
+    ph.row();
     res.sendStatus(200);
   });
 
-  app.listen(COMMAND_HTTP_PORT);
+  var commandServer = app.listen(COMMAND_HTTP_PORT);
 }
 
+
+
 module.exports = CommandProcessor;
+
+console.log(util.inspect(CommandProcessor, {showHidden:true, depth:99} ));
