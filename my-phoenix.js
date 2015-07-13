@@ -172,26 +172,20 @@ var mb = new MaestroIOBoard(maestro, maestroType, maestroPins, function(br) {
       // kick off thing that listens for cmds and calls methods on phoenix
       console.log(util.inspect(commandProcessor));
 
-      var running = true;
-      var cp = new commandProcessor(phoenix);
-      console.log(util.inspect(cp));
-
-      var check_done = function() {
-        console.log("check_done (", running, ")");
-        if (!running) {
-          console.log("see ya");
-          process.exit();
-        }
+      var sleepcheck = function() {
+        console.log("sleep check");
       }
+      
+      var cp = new commandProcessor(phoenix);
 
-      console.log("from main: ", util.inspect(cp.emit));
       cp.on('quit', function() {
-        running = false;
+        console.log("see ya");
+        process.exit();
       });
     
       cp.run();
 
-      // ...and check to see if it has told us to quit recently
-      setInterval(check_done, 5000);
+      // ...and sleep for a while
+      setInterval(sleepcheck, 5000);
   });
 });
