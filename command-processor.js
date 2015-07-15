@@ -128,8 +128,13 @@ CommandProcessor.prototype.run = function() {
 
     for (p in params) {
       if (/^[rl][1-3][cft]$/.test(p))
-        console.log("This is ", p, " > ", params[p]);
-        ph[p].to.call(that, params[p]);
+        console.log("This is \'", p, "\' =  \'", params[p], "\'");
+        var s = 'ph.' + p + '.to(' + params[p] + ')';
+        console.log(s);
+
+        eval(s);
+
+        // ph[p].to.call(null, params[p]);
     }
     res.sendStatus(200);
   });
