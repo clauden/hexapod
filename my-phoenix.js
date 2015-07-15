@@ -121,41 +121,18 @@ var maestroType = PololuMaestro.TYPES.MINI_MAESTRO_24;
 // var maestroType = PololuMaestro.TYPES.MICRO_MAESTRO; 
 
 var ioboard = new IOBoard();
+
+// assume all pins are servos
 var maestroPins = [];
 for (var i = 0; i < 24; i++)
   maestroPins[i] = ioboard.MODES.SERVO;
-/*
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO,
-      ioboard.CONSTANTS.MODES.SERVO
-];
-*/
 
 
 var mb = new MaestroIOBoard(maestro, maestroType, maestroPins, function(br) {
 
-    board = new five.Board({ io: br, repl: false }).on("ready", function() {
+    board = new five.Board({ io: br, repl: false}).on("ready", function() {
 
+      // assign channels, limits, centers
       assignServos();
 
       // set no-op defaults so we can add servos/legs incrementally during development
@@ -172,24 +149,24 @@ var mb = new MaestroIOBoard(maestro, maestroType, maestroPins, function(br) {
           wl: phoenix.waveLeft
           
         });
-      }
+      } else {
 
-      // kick off thing that listens for cmds and calls methods on phoenix
-      console.log("COMMAND-PROCESSOR:", util.inspect(commandProcessor));
+        // kick off thing that listens for cmds and calls methods on phoenix
+        console.log("COMMAND-PROCESSOR:", util.inspect(commandProcessor));
 
-      var sleepcheck = function() {
-        console.log("sleep check");
-      }
+        var sleepcheck = function() {
+          console.log("sleep check");
+        }
+        
+        var cp = new commandProcessor(phoenix);
+        cp.on('quit', function() {
+          console.log("see ya");
+          process.exit();
+        });
       
-      var cp = new commandProcessor(phoenix);
-      cp.on('quit', function() {
-        console.log("see ya");
-        process.exit();
-      });
-    
-      cp.run();
-
-      // ...and sleep for a while
-      setInterval(sleepcheck, 5000);
+        cp.run();
+        // ...and sleep for a while
+        setInterval(sleepcheck, 5000);
+    }
   });
 });
